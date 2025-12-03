@@ -2,4 +2,5 @@ return {
 	["DisplayName"] = "Diamond Pickaxe",
 	["Asset"] = "rbxassetid://136759772308165",
 	["Name"] = "Pickaxe | Diamond",
+	["Model"] = "v_Pickaxe"
 }
