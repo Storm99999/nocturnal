@@ -1,5 +1,5 @@
 return {
-	["DisplayName"] = "Diamond Pickaxe"
+	["DisplayName"] = "Diamond Pickaxe",
 	["Asset"] = "rbxassetid://136759772308165",
 	["Name"] = "Pickaxe | Diamond",
 }
