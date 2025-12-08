@@ -1,6 +1,6 @@
 return {
 	["DisplayName"] = "Diamond Sword",
-	["Asset"] = "rbxassetid://136759772308165",
+	["Asset"] = "rbxassetid://76338658067393",
 	["Name"] = "Sword | Diamond",
     ["Model"] = "v_Sword",
     ["Image"] = "http://www.roblox.com/asset/?id=3610692290"
