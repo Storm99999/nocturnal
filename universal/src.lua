@@ -854,7 +854,7 @@ end;
 
 function Nocturnal:Download(FileName: string, User: string, Repository: string, File: string): { }
 	if IsFile(FileName) then return end;
-	
+
 	local Url: string = Format("https://github.com/%s/%s/blob/main/%s?raw=true", User, Repository, File);
 	local OK, Statement = pcall(function()
 		local Data = game:HttpGetAsync(Url);
@@ -865,15 +865,15 @@ function Nocturnal:Download(FileName: string, User: string, Repository: string, 
 	if OK then
         return { true, OK, Statement };
     else
-        warn("[nocturnal @ downloader]", OK, Statement)
+        warn("[nocturnal @ downloader]", OK, Statement);
         return { false, OK, Statement };
     end;
 end;
 
 --// fetch
 do
-	assert(WriteFile, "[nocturnal @ fetch] Unsupported executor. | ", Nocturnal:FormatTime(Clock()))
-	assert(getgc, "[nocturnal @ fetch] Unsupported executor. | ", Nocturnal:FormatTime(Clock()))
+	assert(WriteFile, "[nocturnal @ fetch] Unsupported executor. | ", Nocturnal:FormatTime(Clock()));
+	assert(getgc, "[nocturnal @ fetch] Unsupported executor. | ", Nocturnal:FormatTime(Clock()));
 
 	Nocturnal:Download("src.lua", "Storm99999", "nocturnal", "universal/src.lua");
 	Nocturnal:Download("esp.lua", "Storm99999", "nocturnal", "universal/esp.lua");
@@ -4238,6 +4238,18 @@ do
         end;
     end);
 end;
+
+--// Queue
+CreateThread(function(): ()
+    queue_on_teleport([[
+        repeat task.wait() until game:IsLoaded();
+        repeat task.wait() until game:GetService("Players").LocalPlayer:FindFirstChild("PlayerScripts");
+
+        task.delay(10, function()
+            loadfile("src.lua")();
+        end);
+    ]]);
+end);
 
 --// Workspace hooks
 do
