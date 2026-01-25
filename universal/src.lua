@@ -53,7 +53,7 @@ local ReadFile: (Path: string) -> string = readfile or function(_: string): stri
 local GetConnections: (Event: any) -> () = getconnections or function(...) return { } end
 local GetUpvalue: (Upvalue: any) -> () = debug.getupvalue or function(...) end
 local LoadFile: (Path: string) -> () = loadfile or function(_: string): () end
-local HookFn: (any) -> () = hookfunction or function(_: any): () end
+local DetourFn: (any) -> () = hookfunction or function(_: any): () end
 
 local Request: ((Options: any) -> any)? =
 	(syn and syn.request)
@@ -310,7 +310,8 @@ end
 
 --// roblox
 local Vec2: (number, number) -> Vector2 = Vector2.new
-local Vec3: (number, number, number) -> Vector3 = Vector3.new
+local Vec3: (number, number, number) -> Vector3 = vector.create
+local VecEmpty: (number, number, number) -> Vector3 = vector.zero
 local UDim2New: (number, number, number, number) -> UDim2 = UDim2.new
 local UDimNew: (number, number) -> UDim = UDim.new
 local InstanceNew: (string) -> Instance = Instance.new
@@ -364,7 +365,7 @@ RayParams.FilterType = Enum.RaycastFilterType.Blacklist
 do
 	for Index, Connection in GetConnections(LogService.MessageOut) do
 		if Connection and Connection.Function then
-			HookFn(Connection.Function, newcclosure(function(...)
+			DetourFn(Connection.Function, newcclosure(function(...)
 				return;
 			end));
 		end;
@@ -372,13 +373,13 @@ do
 
 	for Index, Connection in GetConnections(ScriptContext.Error) do
 		if Connection and Connection.Function then
-			HookFn(Connection.Function, newcclosure(function(...)
+			DetourFn(Connection.Function, newcclosure(function(...)
 				return;
 			end));
 		end;
 	end;
 
-	HookFn(Services.Stats.GetMemoryUsageMbForTag, function()
+	DetourFn(Services.Stats.GetMemoryUsageMbForTag, function()
 		return coroutine.yield();
 	end)
 end;
@@ -698,16 +699,16 @@ local Nocturnal: { } = {
             end
         end,
         ["CircIn"] = function(t)
-            return 1 - math.sqrt(1 - t ^ 2)
+            return 1 - Sqrt(1 - t ^ 2)
         end,
         ["CircOut"] = function(t)
-            return math.sqrt(1 - (t - 1) ^ 2)
+            return Sqrt(1 - (t - 1) ^ 2)
         end,
         ["CircInOut"] = function(t)
             if t < 0.5 then
-                return 0.5 * (1 - math.sqrt(1 - 4 * t ^ 2))
+                return 0.5 * (1 - Sqrt(1 - 4 * t ^ 2))
             else
-                return 0.5 * (math.sqrt(1 - (2 * t - 2) ^ 2) + 1)
+                return 0.5 * (Sqrt(1 - (2 * t - 2) ^ 2) + 1)
             end
         end,
         ["BackIn"] = function(t)
@@ -1194,7 +1195,6 @@ function Nocturnal:GetStrafeCFrame(
 
 	local Result: CFrame? = nil
 
-	-- persistent angle (never resets)
 	Nocturnal._strafeAngle = Nocturnal._strafeAngle or 0
 	Nocturnal._strafeAngle += DeltaTime * Library.Flags["move.strafespeed"]
 
@@ -1394,17 +1394,17 @@ do
         {
             Title = "Nocturnal Remastered"
         }
-    )
+    );
 
     Tabs = {
         ["Legit"] = Window:Tab("Legit", 1),
         ["Rage"] = Window:Tab("Rage", 2),
         ["Visuals"] = Window:Tab("Visuals", 3),
         ["Misc"] = Window:Tab("Misc", 4)
-    }
+    };
 
     --// Settings
-    Library:CreateSettings(Window)
+    Library:CreateSettings(Window);
 
     --// Legit
     do
@@ -1487,12 +1487,12 @@ do
 
 		CreateThread(function()
 			while Wait(3) do
-				SampleDropdown:ClearValues()
-				local Files = listfiles("nocturnal_remastered/samples/")
+				SampleDropdown:ClearValues();
+				local Files = listfiles("nocturnal_remastered/samples/");
 
 				for _, FullPath in Pairs(Files) do
-					SampleDropdown:AddValue(Nocturnal:GetFileName(FullPath))
-				end
+					SampleDropdown:AddValue(Nocturnal:GetFileName(FullPath));
+				end;
 			end
 		end)
 
@@ -1520,7 +1520,7 @@ do
                 Suffix = "°",
                 Callback = function(Value)
                     if Nocturnal.Circle then
-                        Nocturnal.Circle.Radius = Value
+                        Nocturnal.Circle.Radius = Value;
                     end
                 end
             }
@@ -2514,7 +2514,7 @@ do
         chams:Dropdown({
             Flag="chams.method",
             Text="Cham Style",
-            Values={'BoxHandleAdornment', 'Materialistic', 'Highlight', 'Glow', 'Wireframe', 'LayeredGlow', 'OutlineGlow'},
+            Values={'BoxHandleAdornment', 'Materialistic', 'Highlight', 'Glow', 'Wireframe', 'LayeredGlow', 'OutlineGlow', 'Drawing'},
             Selected="BoxHandleAdornment"
         })
 
@@ -2551,14 +2551,11 @@ do
 
                             Switch(Effect, {
                                 Pulse = function()
-                                    local LEG_TIME: number = 1
-                                    local EASING_STYLE: Enum.EasingStyle = Enum.EasingStyle.Linear
-                                    local EASING_DIR: Enum.EasingDirection = Enum.EasingDirection.InOut
-
                                     CreateThread(function()
                                         while Part and Part.Parent do
-                                            local ToOpaque = TweenService:Create(Part, TweenInfo.new(LEG_TIME, EASING_STYLE, EASING_DIR), {Transparency = 0});
-                                            local ToFaded = TweenService:Create(Part, TweenInfo.new(LEG_TIME, EASING_STYLE, EASING_DIR), {Transparency = 0.9});
+                                            local ToOpaque = TweenService:Create(Part, TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Transparency = 0});
+                                            local ToFaded = TweenService:Create(Part, TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {Transparency = 0.9});
+
                                             ToOpaque:Play(); ToOpaque.Completed:Wait();
                                             ToFaded:Play(); ToFaded.Completed:Wait();
 
@@ -2612,7 +2609,7 @@ do
                                     Part.Color = Library.Flags["gunchams.color"]
 
                                     local TextureIndex = 1
-                                    local MAX_TEXTURES = 25
+                                    local MAX_TEXTURES = 25 --// theres only lIke 25 textures in water folder so this is the limit. do not chang.e
 
                                     CreateThread(function()
                                         while Part and Part.Parent do
@@ -2662,10 +2659,10 @@ do
             Nocturnal:Draw("Line", { ZIndex = 999 })
         }
 
-        local currentPos = Vec2(0, 0)
-        local currentGap = 0
-        local pulseTime = 0
-        local rotation = 0
+        local CurrentPos = Vec2(0, 0)
+        local CurrentGap = 0
+        local PulseTime = 0
+        local Rotation = 0
 
 
         local function RotatePoint(p, center, a): Vector2
@@ -2691,59 +2688,60 @@ do
             end
         end
 
-        local function UpdateCrosshair(screenPos, delta): ()
-            local center = Camera.ViewportSize / 2;
-            local len = Library.Flags["world.crosshair.length"] or 5;
-            local baseGap = Library.Flags["world.crosshair.gap"] or 5;
-            local pulseAmount = 6;
-            local pulseSpeed = 1.5;
+       function UpdateCrosshair(ScreenPos, Delta): ()
+            local Center = Camera.ViewportSize / 2;
+            local Len = Library.Flags["world.crosshair.length"] or 5;
+            local BaseGap = Library.Flags["world.crosshair.gap"] or 5;
+            local PulseAmount = 6;
+            local PulseSpeed = 1.5; --// too lazy to make this configurable. fck fof.
 
-            pulseTime = (pulseTime + delta * pulseSpeed) % 2;
-            local t = pulseTime;
-            if t > 1 then t = 2 - t end;
+            PulseTime = (PulseTime + Delta * PulseSpeed) % 2;
+            local T = PulseTime;
+            if T > 1 then T = 2 - T end;
 			
-			local easingName = Library.Flags["misc.easingstyle"] or "QuartInOut";
-			local easingFunc = Nocturnal.EasingStyles[easingName] or Nocturnal.EasingStyles.QuartInOut;
-			local eased = easingFunc(t);
+			local EasingName = Library.Flags["misc.easingstyle"] or "QuartInOut";
+			local EasingFunc = Nocturnal.EasingStyles[EasingName] or Nocturnal.EasingStyles.QuartInOut;
+			local Eased = EasingFunc(T);
 
-            local targetGap;
+            local TargetGap;
             if Library.Flags["misc.effects"] then
-                targetGap = baseGap + eased * pulseAmount;
+                TargetGap = BaseGap + Eased * PulseAmount;
             else
-                targetGap = baseGap;
+                TargetGap = BaseGap;
             end;
 
-            currentGap = currentGap + (targetGap - currentGap) * 0.15;
+            CurrentGap = CurrentGap + (TargetGap - CurrentGap) * 0.15;
 
-            if screenPos then
-                currentPos = currentPos:Lerp(screenPos, 0.2);
+            if ScreenPos then
+                CurrentPos = CurrentPos:Lerp(ScreenPos, 0.2);
             else
-                currentPos = currentPos:Lerp(center, 0.2);
+                CurrentPos = CurrentPos:Lerp(Center, 0.2);
             end;
 
             if Library.Flags["world.crosshair.spin"] then
-                rotation = (rotation + 0.02) % (Pi * 2);
+                Rotation = (Rotation + 0.02) % (Pi * 2);
             end;
 
             local Points = {
-                { Vec2(currentPos.X - currentGap, currentPos.Y), Vec2(currentPos.X - currentGap - len, currentPos.Y) },
-                { Vec2(currentPos.X + currentGap, currentPos.Y), Vec2(currentPos.X + currentGap + len, currentPos.Y) },
-                { Vec2(currentPos.X, currentPos.Y - currentGap), Vec2(currentPos.X, currentPos.Y - currentGap - len) },
-                { Vec2(currentPos.X, currentPos.Y + currentGap), Vec2(currentPos.X, currentPos.Y + currentGap + len) },
+                { Vec2(CurrentPos.X - CurrentGap, CurrentPos.Y), Vec2(CurrentPos.X - CurrentGap - Len, CurrentPos.Y) },
+                { Vec2(CurrentPos.X + CurrentGap, CurrentPos.Y), Vec2(CurrentPos.X + CurrentGap + Len, CurrentPos.Y) },
+                { Vec2(CurrentPos.X, CurrentPos.Y - CurrentGap), Vec2(CurrentPos.X, CurrentPos.Y - CurrentGap - Len) },
+                { Vec2(CurrentPos.X, CurrentPos.Y + CurrentGap), Vec2(CurrentPos.X, CurrentPos.Y + CurrentGap + Len) },
             }
 
             for Index = 1, 4 do
-                local line = c[Index];
-                local from = RotatePoint(Points[Index][1], currentPos, rotation);
-                local to   = RotatePoint(Points[Index][2], currentPos, rotation);
+                local Line = c[Index];
+                local From = RotatePoint(Points[Index][1], CurrentPos, Rotation);
+                local To   = RotatePoint(Points[Index][2], CurrentPos, Rotation);
 
-                line.From = from;
-                line.To = to;
-                line.Thickness = Library.Flags["world.crosshair.width"] or 2;
-                line.Color = Library.Flags["world.crosshair.color"] or Color3New(1,1,1);
-                line.Visible = Library.Flags["world.crosshair.enabled"] == true;
+                Line.From = From;
+                Line.To = To;
+                Line.Thickness = Library.Flags["world.crosshair.width"] or 2;
+                Line.Color = Library.Flags["world.crosshair.color"] or Color3New(1,1,1);
+                Line.Visible = Library.Flags["world.crosshair.enabled"] == true;
             end
         end
+
 
 
         Insert(Nocturnal.Connections, RunService.RenderStepped:Connect(function(dt)
@@ -2795,8 +2793,8 @@ do
             Text = "Custom Crosshair",
             Callback = function(Enabled)
                 if not Enabled then
-                    for i = 1, 4 do
-                        if c[i] then c[i].Visible = false end
+                    for Index = 1, 4 do
+                        if c[Index] then c[Index].Visible = false end
                     end
                 end
             end
@@ -2814,7 +2812,7 @@ do
             Flag = "world.crosshair.spin",
             Text = "Spin",
             Callback = function(v)
-                if not v then rotation = 0 end
+                if not v then Rotation = 0 end;
             end
         })
 
@@ -2860,34 +2858,34 @@ do
             Callback = function(Value): ()
                 if not Value then return end
 				if Value == 'None' then return end
-				if Lighting:FindFirstChildOfClass("Sky") then Lighting:FindFirstChildOfClass("Sky"):Destroy() end
-				local skybox = InstanceNew("Sky", Lighting)
+				if Lighting:FindFirstChildOfClass("Sky") then Lighting:FindFirstChildOfClass("Sky"):Destroy() end;
+				local Skybox = InstanceNew("Sky", Lighting);
 
-				skybox.SkyboxLf = Nocturnal.Skies[Value].SkyboxLf
-				skybox.SkyboxBk = Nocturnal.Skies[Value].SkyboxBk
-				skybox.SkyboxDn = Nocturnal.Skies[Value].SkyboxDn
-				skybox.SkyboxFt = Nocturnal.Skies[Value].SkyboxFt
-				skybox.SkyboxRt = Nocturnal.Skies[Value].SkyboxRt
-				skybox.SkyboxUp = Nocturnal.Skies[Value].SkyboxUp
+				Skybox.SkyboxLf = Nocturnal.Skies[Value].SkyboxLf;
+				Skybox.SkyboxBk = Nocturnal.Skies[Value].SkyboxBk;
+				Skybox.SkyboxDn = Nocturnal.Skies[Value].SkyboxDn;
+				Skybox.SkyboxFt = Nocturnal.Skies[Value].SkyboxFt;
+				Skybox.SkyboxRt = Nocturnal.Skies[Value].SkyboxRt;
+				Skybox.SkyboxUp = Nocturnal.Skies[Value].SkyboxUp;
 
-				skybox.Name = "skeibocks"
+				Skybox.Name = "skeibocks"
             end
         })
 
-        local function GetOrCreateNamedEffect(Name, ClassName): Instance
-            local existing = Lighting:FindFirstChild(Name)
+        local function GetOrCreateEffect(Name, ClassName): Instance
+            local existing = Lighting:FindFirstChild(Name);
 
             if existing then
                 if existing.ClassName ~= ClassName then
-                    existing:Destroy()
+                    existing:Destroy();
                 else
-                    return existing
-                end
-            end
+                    return existing;
+                end;
+            end;
 
-            local inst = InstanceNew(ClassName)
-            inst.Name = Name
-            inst.Parent = Lighting
+            local inst = InstanceNew(ClassName);
+            inst.Name = Name;
+            inst.Parent = Lighting;
 
             return inst;
         end
@@ -2958,7 +2956,7 @@ do
 
                     --// Bloom
                     if Library.Flags["world_bloom"] then
-                        local b = GetOrCreateNamedEffect("nBloom", "BloomEffect")
+                        local b = GetOrCreateEffect("nBloom", "BloomEffect")
                         b.Enabled = true
                         if Library.Flags["world_bi"] then
                             b.Intensity = Library.Flags["world_bi"]
@@ -2978,7 +2976,7 @@ do
 
                     --// Sun Rays
                     if Library.Flags["world_sr"] then
-                        local s = GetOrCreateNamedEffect("nSunRays", "SunRaysEffect")
+                        local s = GetOrCreateEffect("nSunRays", "SunRaysEffect")
                         s.Enabled = true
                         if Library.Flags["world_sri"] then
                             s.Intensity = Library.Flags["world_sri"]
@@ -2995,7 +2993,7 @@ do
 
                     --// Color Correction
                     if Library.Flags["world_cc"] then
-                        local c = GetOrCreateNamedEffect("nColorCorrection", "ColorCorrectionEffect")
+                        local c = GetOrCreateEffect("nColorCorrection", "ColorCorrectionEffect")
                         c.Enabled = true
                         if Library.Flags["world_ccc"] then
                             c.TintColor = Library.Flags["world_ccc"]
@@ -3104,18 +3102,18 @@ do
             }
         )
 
-        -- Bloom
+        --// Bloom
         world:Toggle({Text = "Bloom", Flag = "world_bloom"})
         world:Slider({Text = "Bloom Intensity", Min = 0, Max = 10, Value = 4, Flag = "world_bi"})
         world:Slider({Text = "Bloom Size", Min = 0, Max = 50, Value = 15, Flag = "world_bs"})
         world:Slider({Text = "Bloom Threshold", Min = 0, Max = 1, Value = 0.15, Increment = 0.01, Flag = "world_bt"})
 
-        -- Sun Rays
+        --// Sun Rays
         world:Toggle({Text = "Sun Rays", Flag = "world_sr"})
         world:Slider({Text = "Intensity", Min = 0, Max = 1, Value = 0.01, Increment = 0.01, Flag = "world_sri"})
         world:Slider({Text = "Spread", Min = 0, Max = 1, Value = 0.1, Increment = 0.1, Flag = "world_srs"})
 
-        -- Color Correction
+        --// Color Correction
         world:Toggle({Text = "Color correction", Flag = "world_cc"}):Color(
             {Text = "Correction Color", Flag = "world_ccc", Color = Color3.fromRGB(255, 85, 255)}
         )
@@ -3215,7 +3213,7 @@ do
                         end
                     end)
 
-                    Insert(Nocturnal.Connections, BunnyConnection)
+                    Insert(Nocturnal.Connections, BunnyConnection);
                 else
                     if BunnyConnection then
                         BunnyConnection:Disconnect()
@@ -3245,7 +3243,7 @@ do
                 local Character = LocalPlayer.Character
 
                 if Nocturnal:Alive() and Character then
-                    DoCollision(Character, not Enabled)
+                    DoCollision(Character, not Enabled);
                 end
             end
         }):Bind({
@@ -3256,7 +3254,7 @@ do
             Callback = function(Enabled: boolean)
                 local Character = LocalPlayer.Character
                 if Nocturnal:Alive() and Character then
-                    DoCollision(Character, not Enabled)
+                    DoCollision(Character, not Enabled);
                 end
             end
         })
@@ -3927,7 +3925,7 @@ end;
 do
     local LastEnabled = false
 
-    local function RemoveAdorns(Part)
+    function RemoveAdorns(Part): ()
         if not Part then return end;
         local Children = Part:GetChildren();
 
@@ -3939,7 +3937,7 @@ do
         end
     end
 
-    local function RemoveCharChams(Char)
+    function RemoveCharChams(Char): ()
         if not Char then return end;
         local Children = Char:GetChildren();
 
@@ -3959,11 +3957,11 @@ do
             Ad = InstanceNew("CylinderHandleAdornment")
             Ad.Height = Part.Size.Y + (Extra.HeightOffset or 0)
             Ad.Radius = (Part.Size.X * 0.5) + (Extra.RadiusOffset or 0)
-            Ad.CFrame = CFrameNew(Vec3(), Vec3(0, 1, 0))
+            Ad.CFrame = CFrameNew(VecEmpty, Vec3(0, 1, 0))
 
         elseif Type == "Box" then
             Ad = InstanceNew("BoxHandleAdornment")
-            Ad.Size = Part.Size + (SizeOffset or Vec3(0,0,0))
+            Ad.Size = Part.Size + (SizeOffset or VecEmpty)
 
         elseif Type == "Wireframe" then
             Ad = InstanceNew("WireframeHandleAdornment")
@@ -3990,7 +3988,7 @@ do
 
         Ad.Parent = Part
 
-        return Ad
+        return Ad;
     end
 
 
@@ -4011,6 +4009,10 @@ do
             local GlowColor = Library.Flags["chams.outline.color"]
             local Trans = Library.Flags["chams.trans"]
 
+			if ChamsType == 'Drawing' then
+				Nocturnal:ClearAllChams();
+			end
+
         	for _, Entry in Nocturnal.PlayerCache._cache do
                 if not Entry.Alive then
 					local Char = Entry.PlayerInstance.Character
@@ -4026,7 +4028,7 @@ do
 				for Name, Part in BodyParts do
 					if not Part or not Part:IsA("BasePart") or Part.Transparency >= 1 then continue end;
 
-					RemoveAdorns(Part)
+					RemoveAdorns(Part);
 
 					if ChamsType == "Materialistic" then
 						local SA = Part:FindFirstChildOfClass("SurfaceAppearance")
@@ -4130,13 +4132,12 @@ do
 						local Points = {}
 
 						for k = 1, #Edges do
-							local E = Edges[k]
-							Points[#Points + 1] = Corners[E[1]]
-							Points[#Points + 1] = Corners[E[2]]
+							local E = Edges[k];
+							Points[#Points + 1] = Corners[E[1]];
+							Points[#Points + 1] = Corners[E[2]];
 						end
 
-						Ad:AddLines(Points)
-
+						Ad:AddLines(Points);
 					elseif ChamsType == "Highlight" then
 						local Char = Entry.PlayerInstance.Character
 						if not Char then continue end
@@ -4235,6 +4236,9 @@ do
 
             Enemy.offScreenArrow = Flags["esp.arrow"];
             Enemy.offScreenArrowColor[1] = Flags["esp.arrow.color"];
+
+			Enemy.chams = Flags["chams.enabled"] and Flags["chams.method"] == "Drawing";
+			Enemy.chamsFillColor[1] = Flags["chams.color"];
         end;
     end);
 end;
@@ -4326,9 +4330,8 @@ do
     end));
 end;
 
-
 local Old;
-Old = HookFn(Environment().Nocturnal.Unload, function(...)
+Old = DetourFn(Environment().Nocturnal.Unload, function(...)
 	for Index, Connection in Nocturnal.Connections do
 		if Connection and Connection.Disconnect then
 			Connection:Disconnect();
